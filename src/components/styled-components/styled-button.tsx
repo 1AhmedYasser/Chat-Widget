@@ -1,6 +1,7 @@
 import React, { HTMLAttributes, ReactNode } from 'react';
 import styled, { css } from 'styled-components';
 import { StyledButtonType } from '../../constants';
+import { colors } from '../../styling/style_settings';
 
 type StyledButtonProps = {
   active?: boolean;
@@ -28,13 +29,13 @@ export default function StyledButton(props: StyledButtonProps): JSX.Element {
 }
 
 const activeStyles = css`
-  background-color: #003cff;
+  background-color: ${colors.primary};
   color: #fff;
 `;
 
 const lightStyles = css`
   background-color: #fff;
-  color: #003cff;
+  color: ${colors.primary};
 
   :hover {
     background-color: #f0f1f2;
@@ -42,19 +43,19 @@ const lightStyles = css`
 `;
 const grayStyles = css`
   background-color: #f0f1f2;
-  color: #003cff;
+  color: ${colors.primary};
 
   :hover {
-    background-color: #003cff;
+    background-color: ${colors.primary};
     color: #fff;
   }
 `;
 const darkStyles = css`
-  background-color: #003cff;
+  background-color: ${colors.primary};
   color: #f0f1f2;
 
   :hover {
-    background-color: #003cff;
+    background-color: ${colors.primary};
     color: #fff;
   }
 `;

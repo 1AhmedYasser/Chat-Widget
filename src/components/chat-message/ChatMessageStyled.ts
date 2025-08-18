@@ -157,7 +157,7 @@ export const ChatMessageStyled = styled.div`
         margin: 0.7rem 0.3rem 0.3rem 0.3rem;
         padding: 0.3rem 1.5rem;
         background-color: #f0f1f2;
-        color: #003cff;
+        color: ${colors.primary};
         border: none;
         box-shadow: 2px 1px 4px grey;
 
@@ -253,7 +253,7 @@ export const ChatMessageStyled = styled.div`
                 .emergency {
                     height: 100%;
                     width: 100%;
-                    background-color: #003cff;
+                    background-color: ${colors.primary};
                     border-radius: 50%;
                     text-align: center;
                     font-size: 32px;

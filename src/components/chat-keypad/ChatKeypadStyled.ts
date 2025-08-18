@@ -78,7 +78,7 @@ export const ChatKeypadStyled = styled.div`
   }
 
   .button_cancelUpload {
-    background: #003cff;
+    background: ${colors.primary};
     width: 32px;
     height: 32px;
     cursor: pointer;

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {useTranslation} from 'react-i18next';
 import SmileIcon from '../../static/icons/smiling_buerokratt.svg';
 import {FEEDBACK_CONFIRMATION_TIMEOUT} from '../../constants';
+import { colors } from '../../styling/style_settings';
 
 const ChatFeedbackConfirmation = (): JSX.Element => {
     const {t} = useTranslation();
@@ -27,7 +28,7 @@ const FeedbackConfirmationStyle = styled.div`
 
     .feedback-confirmation-message {
         padding: 1rem 0;
-        color: #003cff;
+        color: ${colors.primary};
     }
 
     .smile-icon {
@@ -46,7 +47,7 @@ const TimeoutBar = styled.div<{ timeout: string }>`
 
     ::after {
         animation: timeout ${(props) => props.timeout} forwards linear;
-        background-color: #003cff;
+        background-color: ${colors.primary};
         content: '';
         height: 1rem;
         position: absolute;

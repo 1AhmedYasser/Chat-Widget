@@ -1,3 +1,5 @@
+import { colors } from "./styling/style_settings";
+
 /* eslint-disable */
 export const SESSION_STORAGE_CHAT_ID_KEY = 'byk-va-cid';
 export const LOCAL_STORAGE_TARA_LOGIN_REDIRECT = 'byk-va-tara-login-redirect';
@@ -30,7 +32,7 @@ export const ONLINE_CHECK_INTERVAL_ACTIVE_CHAT = 10_000;
 export const CHAT_BUBBLE_PROACTIVE_SECONDS = 3;
 export const CHAT_SHOW_BUBBLE_MESSAGE = false;
 export const CHAT_BUBBLE_MESSAGE_DELAY_SECONDS = 5;
-export const CHAT_BUBBLE_COLOR = '#003CFF';
+export const CHAT_BUBBLE_COLOR = colors.primary;
 export const CHAT_BUBBLE_ANIMATION = 'shockwave';
 export const CHAT_INPUT_DEBOUNCE_TIMEOUT = 500;
 export const CURRENT_COUNTRY = 'EE';

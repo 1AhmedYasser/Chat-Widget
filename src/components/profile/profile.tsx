@@ -53,6 +53,7 @@ export const Profile = (): JSX.Element => {
                     style={{
                         animationIterationCount: widgetConfig.proactiveSeconds,
                         backgroundColor: widgetConfig.color,
+                        borderColor: widgetConfig.color,
                     }}
                     aria-label={t("profile.button.open-chat")}
                     title={t("profile.button.open-chat")}

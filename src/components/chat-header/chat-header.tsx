@@ -10,6 +10,7 @@ import {useAppDispatch} from '../../store';
 import useChatSelector from '../../hooks/use-chat-selector';
 import useAuthenticationSelector from '../../hooks/use-authentication-selector';
 import {ChatHeaderInitialStyles, ChatHeaderStyles} from "./ChatHeaderStyled";
+import useWidgetSelector from '../../hooks/use-widget-selector';
 
 interface ChatHeaderType {
     detailHandler: MouseEventHandler<HTMLButtonElement>;

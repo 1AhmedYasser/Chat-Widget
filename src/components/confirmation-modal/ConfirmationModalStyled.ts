@@ -191,7 +191,7 @@ export const ConfirmationModalStyled = styled.div`
 
         :hover,
         :focus {
-            background-color: #003cff !important;
+            background-color: ${colors.primary} !important;
         }
     }
 
@@ -227,7 +227,7 @@ export const ConfirmationModalStyled = styled.div`
             transform: rotate(360deg);
         }
     }
-`
+`;
 
 export const ConfirmationModalStyles = styled.div`
     height: auto;
@@ -286,7 +286,7 @@ export const ConfirmationModalStyles = styled.div`
 
         :hover,
         :focus {
-            background-color: #003cff !important;
+            background-color: ${colors.primary} !important;
         }
     }
 

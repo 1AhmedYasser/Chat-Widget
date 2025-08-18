@@ -74,7 +74,7 @@ export const ChatFeedbackStyled = styled.div`
 
         :hover,
         :focus {
-            background-color: #003cff !important;
+            background-color: ${colors.primary} !important;
         }
     }
 

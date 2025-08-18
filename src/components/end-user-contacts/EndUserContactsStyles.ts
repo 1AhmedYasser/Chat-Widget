@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { colors } from "../../styling/style_settings";
 
 export const TextAreaStyle = styled.textarea`
     width: 100%;
@@ -15,7 +16,7 @@ export const EndUserContactsStyle = styled.div`
     input,
     textarea {
         border: 0;
-        border-bottom: 1px solid #003cff;
+        border-bottom: 1px solid ${colors.primary};
         padding-bottom: 5px;
         width: 100%;
     }

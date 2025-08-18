@@ -1,5 +1,6 @@
 import {SyntheticEvent, useState} from "react";
 import {StarsStyles} from "./StarsStyled";
+import { colors } from "../../styling/style_settings";
 
 interface Props {
     onClick: (e: number) => any;
@@ -30,7 +31,7 @@ const Stars = ({onClick}: Props) => {
                     >
                         <path
                             d="M20.524 27.0932L17 24.5322L7.111 31.7172L10.889 20.0922L1 12.9082H13.223L17 1.2832L20.777 12.9082H33L23.111 20.0922L26.889 31.7172"
-                            stroke="#003CFF"
+                            stroke={colors.primary}
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
