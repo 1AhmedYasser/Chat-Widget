@@ -24,7 +24,6 @@ export const ScrollProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     if (ref) {
       const instance = ref.osInstance();
-      
 
       if (instance) {
         const viewport = instance.getElements().viewport;
