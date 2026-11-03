@@ -35,10 +35,17 @@ const ConfirmationModalNps = ({ npsFeedback }: Props) => {
   const handleFeedback = (feedbackRating: string | null) => {
     if (feedbackRating === null) return;
     setSelectedFeedbackButtonValue(feedbackRating);
-    dispatch(
-      sendChatNpmRating({ NpmRating: parseInt(feedbackRating ?? "1") }),
-    );
-    dispatch(setFeedbackRatingGiven(true));
+  };
+
+  const handleConfirm = () => {
+    if (selectedFeedbackButtonValue !== "") {
+      dispatch(sendChatNpmRating({ NpmRating: parseInt(selectedFeedbackButtonValue) }));
+      dispatch(setFeedbackRatingGiven(true));
+    }
+    if (feedbackText !== "" && feedbackText.trim().length <= FEEDBACK_MESSAGE_MAX_CHAR_LIMIT) {
+      dispatch(sendFeedbackMessage({ userInput: feedbackText }));
+    }
+    dispatch(endChat(endChatParams));
   };
   return (
     <ConfirmationModalStyled>
@@ -93,24 +100,14 @@ const ConfirmationModalNps = ({ npsFeedback }: Props) => {
         </ConfirmationModalStyles>
         <div className="npsActions">
           <Button
-            onClick={() => {
-              if (feedbackText !== "" && feedbackText.trim().length <= FEEDBACK_MESSAGE_MAX_CHAR_LIMIT) {
-                dispatch(sendFeedbackMessage({ userInput: feedbackText }));
-              }
-              dispatch(endChat(endChatParams));
-            }}
+            onClick={() => dispatch(endChat(endChatParams))}
             title={t("widget.action.skip")}
             color={ButtonColor.GRAY}
           >
             {t("widget.action.skip")}
           </Button>
           <Button
-            onClick={() => {
-              if (feedbackText !== "" && feedbackText.trim().length <= FEEDBACK_MESSAGE_MAX_CHAR_LIMIT) {
-                dispatch(sendFeedbackMessage({ userInput: feedbackText }));
-              }
-              dispatch(endChat(endChatParams));
-            }}
+            onClick={handleConfirm}
             title={t("widget.action.confirm")}
             color={feedbackText.trim().length > FEEDBACK_MESSAGE_MAX_CHAR_LIMIT ? ButtonColor.GRAY : ButtonColor.BLUE}
             disabled={feedbackText.trim().length > FEEDBACK_MESSAGE_MAX_CHAR_LIMIT}
