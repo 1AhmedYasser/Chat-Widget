@@ -8,6 +8,7 @@ import {EndUserTechnicalData} from "../model/chat-ini-model";
 import {EmergencyNoticeResponse} from "../model/emergency-notice-response-model";
 import {EstimatedWaiting} from "../slices/chat-slice";
 import {getMultiDomainPath, getMultiDomainUrl} from "./multidomain-service";
+import {getCurrentPageUrl} from "../utils/page-url-utils";
 
 interface Document {
   _id: string;
@@ -31,7 +32,7 @@ class ChatService {
     holidays: string[],
     holidayNames: string
   ): Promise<Chat> {
-    return http.post(RUUTER_ENDPOINTS.INIT_CHAT, { message, endUserTechnicalData, holidays, holidayNames , domain: getMultiDomainPath()});
+    return http.post(RUUTER_ENDPOINTS.INIT_CHAT, { message, endUserTechnicalData, holidays, holidayNames , domain: getMultiDomainPath(), endUserUrl: getCurrentPageUrl()});
   }
 
   getChatById(chatId: string): Promise<Chat> {
@@ -39,15 +40,15 @@ class ChatService {
   }
 
   sendNewMessage(message: Message, holidays: string[], holidayNames: string): Promise<Document> {
-    return http.post(RUUTER_ENDPOINTS.POST_MESSAGE, { message, holidays, holidayNames, domain: getMultiDomainPath()});
+    return http.post(RUUTER_ENDPOINTS.POST_MESSAGE, { message, holidays, holidayNames, domain: getMultiDomainPath(), endUserUrl: getCurrentPageUrl()});
   }
 
   sendNewLlmMessage(message: Message, holidays: string[], holidayNames: string, context: any, uuid: string): Promise<Document> {
-    return http.post(RUUTER_ENDPOINTS.POST_LLM_MESSAGE, { message, holidays, holidayNames, context, uuid, domain: getMultiDomainPath()});
+    return http.post(RUUTER_ENDPOINTS.POST_LLM_MESSAGE, { message, holidays, holidayNames, context, uuid, domain: getMultiDomainPath(), endUserUrl: getCurrentPageUrl()});
   }
 
   sendNewSilentMessage(message: Message, holidays: string[], holidayNames: string): Promise<Document> {
-    return http.post(RUUTER_ENDPOINTS.POST_MESSAGE, { message, holidays, holidayNames, silent: true, domain: getMultiDomainPath() });
+    return http.post(RUUTER_ENDPOINTS.POST_MESSAGE, { message, holidays, holidayNames, silent: true, domain: getMultiDomainPath(), endUserUrl: getCurrentPageUrl() });
   }
 
   sendMessagePreview({ chatId, content }: Message): Promise<void> {
