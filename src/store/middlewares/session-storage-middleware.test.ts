@@ -1,5 +1,5 @@
 import sessionStorageMiddleware from './session-storage-middleware';
-import { endChat, initChat, initGreetingService } from '../../slices/chat-slice';
+import { endChat, initChat, initGreetingService, sendNewMessage } from '../../slices/chat-slice';
 import { SESSION_STORAGE_CHAT_ID_KEY } from '../../constants';
 import * as localStorageUtils from '../../utils/local-storage-utils';
 
@@ -10,6 +10,7 @@ const CHAT_ID = '123';
 const initAction = { type: initChat.fulfilled.type, payload: { id: CHAT_ID } };
 const initGreetingServiceAction = { type: initGreetingService.fulfilled.type, payload: { id: CHAT_ID } };
 const endAction = { type: endChat.pending.type };
+const sendNewMessageAction = { type: sendNewMessage.fulfilled.type, meta: { arg: { chatId: CHAT_ID } } };
 
 describe('sessionStorageMiddleware', () => {
   it('calls setToLocalStorage on initChat fulfillment with correct arguments', () => {
@@ -19,6 +20,11 @@ describe('sessionStorageMiddleware', () => {
 
   it('calls setToLocalStorage on initGreetingService fulfillment with correct arguments', () => {
     sessionStorageMiddleware(store as never)(next)(initGreetingServiceAction);
+    expect(setToLocalStorage).toHaveBeenCalledWith(SESSION_STORAGE_CHAT_ID_KEY, CHAT_ID);
+  });
+
+  it('calls setToLocalStorage on sendNewMessage fulfillment with correct arguments', () => {
+    sessionStorageMiddleware(store as never)(next)(sendNewMessageAction);
     expect(setToLocalStorage).toHaveBeenCalledWith(SESSION_STORAGE_CHAT_ID_KEY, CHAT_ID);
   });
 
