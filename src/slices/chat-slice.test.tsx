@@ -141,13 +141,33 @@ describe('Chat slice', () => {
     it('should set chat id and chat status open when initChat is fulfilled', () => {
       const action = { type: initChat.fulfilled.type, payload: { id: 1 } };
       const state = reducer(initialChatState, action);
-      expect(state).toEqual({ ...initialChatState, chatId: 1, chatStatus: CHAT_STATUS.OPEN });
+      expect(state).toEqual({ ...initialChatState, chatId: 1, verifiedChatId: 1, chatStatus: CHAT_STATUS.OPEN });
     });
 
     it('should set customerSupportId and chat status when getChat is fulfilled', () => {
-      const action = { type: getChat.fulfilled.type, payload: { status: CHAT_STATUS.ENDED, customerSupportId: 1 } };
+      const action = { type: getChat.fulfilled.type, payload: { id: '1', status: CHAT_STATUS.ENDED, customerSupportId: 1 } };
       const state = reducer({ ...initialChatState, chatStatus: CHAT_STATUS.OPEN }, action);
-      expect(state).toEqual({ ...initialChatState, chatStatus: CHAT_STATUS.ENDED, customerSupportId: 1 });
+      expect(state).toEqual({ ...initialChatState, verifiedChatId: '1', chatStatus: CHAT_STATUS.ENDED, customerSupportId: 1 });
+    });
+
+    it('should clear an invalid chat id when getChat is rejected and no chat is verified', () => {
+      const action = { type: getChat.rejected.type, payload: { chatId: 'invalid', isInvalidChatId: true } };
+      const state = reducer({ ...initialChatState, chatId: 'invalid' }, action);
+      expect(state.chatId).toBeNull();
+      expect(state.verifiedChatId).toBeNull();
+    });
+
+    it('should restore the verified chat id when getChat is rejected for an invalid chat id', () => {
+      const action = { type: getChat.rejected.type, payload: { chatId: 'invalid', isInvalidChatId: true } };
+      const state = reducer({ ...initialChatState, chatId: 'invalid', verifiedChatId: 'active' }, action);
+      expect(state.chatId).toEqual('active');
+      expect(state.verifiedChatId).toEqual('active');
+    });
+
+    it('should keep the chat id when getChat is rejected for a non client error', () => {
+      const action = { type: getChat.rejected.type, payload: { chatId: 'active', isInvalidChatId: false } };
+      const state = reducer({ ...initialChatState, chatId: 'active' }, action);
+      expect(state.chatId).toEqual('active');
     });
 
     it('should get chat messages when getChatMessages is fulfilled', () => {

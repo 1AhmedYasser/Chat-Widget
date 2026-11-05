@@ -12,6 +12,7 @@ export const initialChatState: ChatState = {
   },
   errorMessage: "",
   chatId: null,
+  verifiedChatId: null,
   chatDimensions: {
     width: CHAT_WINDOW_WIDTH,
     height: CHAT_WINDOW_HEIGHT,

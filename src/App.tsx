@@ -72,7 +72,7 @@ declare global {
 
 const App: FC = () => {
   const dispatch = useAppDispatch();
-  const { isChatOpen, messages, chatId, emergencyNotice, isFullScreen } = useChatSelector();
+  const { isChatOpen, messages, chatId, verifiedChatId, emergencyNotice, isFullScreen } = useChatSelector();
   const { widgetConfig } = useWidgetSelector();
   const [displayWidget, setDisplayWidget] = useState(
     !!getFromLocalStorage(SESSION_STORAGE_CHAT_ID_KEY) || isOfficeHours()
@@ -226,6 +226,10 @@ const App: FC = () => {
     if (emergencyNotice === null) dispatch(getEmergencyNotice());
     if (!widgetConfig.isLoaded) dispatch(getWidgetConfig());
   }, [chatId, dispatch, messages, widgetConfig]);
+
+  useEffect(() => {
+    if (chatId && messages.length && chatId !== verifiedChatId) dispatch(getChat());
+  }, [chatId, verifiedChatId]);
 
   useEffect(() => {
     if (!widgetConfig.instantlyOpenChatWidget || isMobile() || chatId) return;

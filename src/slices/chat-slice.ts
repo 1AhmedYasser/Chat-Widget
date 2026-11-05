@@ -58,6 +58,7 @@ export interface EndUserContacts {
 
 export interface ChatState {
   chatId: string | null;
+  verifiedChatId: string | null;
   isChatOpen: boolean;
   chatStatus: CHAT_STATUS | null;
   chatDimensions: {
@@ -135,6 +136,7 @@ const initialEstimatedTime = {
 
 const initialState: ChatState = {
   chatId: null,
+  verifiedChatId: null,
   isChatOpen: false,
   chatStatus: null,
   chatDimensions: getInitialChatDimensions(),
@@ -208,6 +210,7 @@ const initialState: ChatState = {
 
 const initialStateOpen: ChatState = {
     chatId: null,
+    verifiedChatId: null,
     isChatOpen: true,
     chatStatus: null,
     chatDimensions: getInitialChatDimensions(),
@@ -299,14 +302,25 @@ export const initChat = createAsyncThunk(
   }
 );
 
-export const getChat = createAsyncThunk(
+export const getChat = createAsyncThunk<
+  Chat | null,
+  void,
+  { rejectValue: { chatId: string; isInvalidChatId: boolean } }
+>(
   "chat/getChat",
   async (_args, thunkApi) => {
     const {
       chat: { chatId },
     } = thunkApi.getState() as { chat: ChatState };
-    if (chatId) return ChatService.getChatById(chatId);
-    return null;
+    if (!chatId) return null;
+    try {
+      const chat = await ChatService.getChatById(chatId);
+      if (!chat?.id) return thunkApi.rejectWithValue({ chatId, isInvalidChatId: true });
+      return chat;
+    } catch (error: any) {
+      const status = error?.response?.status;
+      return thunkApi.rejectWithValue({ chatId, isInvalidChatId: status >= 400 && status < 500 });
+    }
   }
 );
 
@@ -891,6 +905,7 @@ export const chatSlice = createSlice({
     });
     builder.addCase(initChat.fulfilled, (state, action) => {
       state.chatId = action.payload.id;
+      state.verifiedChatId = action.payload.id;
       state.loading = false;
       state.chatStatus = CHAT_STATUS.OPEN;
     });
@@ -911,6 +926,7 @@ export const chatSlice = createSlice({
     });
     builder.addCase(initGreetingService.fulfilled, (state, action) => {
       state.chatId = action.payload.id;
+      state.verifiedChatId = action.payload.id;
       state.loading = false;
       state.chatStatus = CHAT_STATUS.OPEN;
       state.showLoadingMessage = false;
@@ -937,8 +953,16 @@ export const chatSlice = createSlice({
     });
     builder.addCase(getChat.fulfilled, (state, action) => {
       if (!action.payload) return;
+      state.verifiedChatId = action.payload.id;
       state.chatStatus = action.payload.status as CHAT_STATUS;
       state.customerSupportId = action.payload.customerSupportId;
+    });
+    builder.addCase(getChat.rejected, (state, action) => {
+      if (!action.payload?.isInvalidChatId || action.payload.chatId !== state.chatId) return;
+      const fallbackChatId = state.verifiedChatId !== state.chatId ? state.verifiedChatId : null;
+      state.chatId = fallbackChatId;
+      state.verifiedChatId = fallbackChatId;
+      setToLocalStorage(SESSION_STORAGE_CHAT_ID_KEY, fallbackChatId);
     });
     builder.addCase(getChatMessages.fulfilled, (state, action) => {
       if (!action.payload) return;
@@ -1007,6 +1031,7 @@ export const chatSlice = createSlice({
     builder.addCase(generateForwardingRequest.fulfilled, (state, action) => {
       if (action.payload[0].externalId) {
         state.chatId = action.payload[0].externalId;
+        state.verifiedChatId = action.payload[0].externalId;
         state.isChatRedirected = true;
       }
     });
