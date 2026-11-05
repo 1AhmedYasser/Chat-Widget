@@ -2,6 +2,7 @@ import { UserContacts } from "./../model/user-contacts-model";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Attachment, Message, SendLLMMessagePayload } from "../model/message-model";
 import ChatService from "../services/chat-service";
+import { getCurrentPageUrl } from "../utils/page-url-utils";
 import {
   AUTHOR_ROLES,
   CHAT_EVENTS,
@@ -289,7 +290,7 @@ export const initChat = createAsyncThunk(
     return ChatService.init(
       message,
       {
-        endUserUrl: window.location.href.toString(),
+        endUserUrl: getCurrentPageUrl(),
         endUserOs: agentInfo,
       },
       holidays,
@@ -495,7 +496,7 @@ export const initGreetingService = createAsyncThunk(
     const userDeviceModel = userAgent.device.model != undefined ? ` (${userAgent.device.model})` : '';
     const agentInfo = `Agent: ${browserName} (v${fullBrowserVersion}), OS: ${osName} (v${osVersion}), device: ${userDevice}${userDeviceModel}`;
     return ChatService.initGreetingService({
-      endUserUrl: window.location.href.toString(),
+      endUserUrl: getCurrentPageUrl(),
       endUserOs: agentInfo,
     });
   }
