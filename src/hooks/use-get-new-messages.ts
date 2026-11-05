@@ -10,6 +10,7 @@ import {
   handleStateChangingEventMessages,
   sendNewLlmMessage,
   setShowLoadingMessage,
+  setStopTypingStream,
   setTypingStream,
   updateStreamingMessage,
 } from "../slices/chat-slice";
@@ -27,7 +28,7 @@ const getLatestUpdatedTimestamp = (messages: Message[], current: string): string
   }, current);
 
 const useGetNewMessages = (): void => {
-  const { lastReadMessageTimestamp, isChatEnded, chatId } = useChatSelector();
+  const { lastReadMessageTimestamp, isChatEnded, chatId, stopTypingStream, messages } = useChatSelector();
   const dispatch = useAppDispatch();
   const [sseUrl, setSseUrl] = useState("");
   const [lastReadMessageTimestampValue, setLastReadMessageTimestampValue] =
@@ -39,6 +40,15 @@ const useGetNewMessages = (): void => {
   const currentStreamId = useRef("");
   const currentStreamUuid = useRef("");
   const currentStreamStartTime = useRef("");
+
+  useEffect(() => {
+    if (!stopTypingStream) return;
+    currentStreamUuid.current = "";
+    if (!messages.some((message) => message.isStreaming !== undefined)) {
+      dispatch(setStopTypingStream(false));
+      dispatch(setShowLoadingMessage(false));
+    }
+  }, [stopTypingStream]);
 
   useEffect(() => {
     if (lastReadMessageTimestamp && !lastReadMessageTimestampValue) {
@@ -93,7 +103,7 @@ const useGetNewMessages = (): void => {
           currentStreamUuid.current = uuidv4();
           currentStreamStartTime.current = new Date().toISOString();
           dispatch(setTypingStream(true));
-        } else if (type === "stream_chunk" && data.channelId === chatId) {
+        } else if (type === "stream_chunk" && data.channelId === chatId && currentStreamUuid.current) {
           currentStreamContent.current += data.content;
 
           const updatedMessage: Message = {
@@ -109,7 +119,7 @@ const useGetNewMessages = (): void => {
           };
 
           dispatch(updateStreamingMessage(updatedMessage));
-        } else if (type === "stream_complete" && data.channelId === chatId) {
+        } else if (type === "stream_complete" && data.channelId === chatId && currentStreamUuid.current) {
           const finalMessage: Message = {
             id: currentStreamUuid.current,
             content: currentStreamContent.current,
