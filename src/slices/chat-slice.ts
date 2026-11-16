@@ -749,14 +749,33 @@ export const chatSlice = createSlice({
     },
     addMessagesToDisplay: (state, action: PayloadAction<Message[]>) => {
       let receivedMessages = action.payload || [];
+
+      const answeredForwardToCsaIds = new Set(
+        state.messages
+          .filter(
+            (message) =>
+              message.event === CHAT_EVENTS.CONTINUE_CHATTING_WITH_BOT ||
+              message.event === CHAT_EVENTS.FORWARDED_TO_BACKOFFICE
+          )
+          .map((message) => message.id)
+      );
+      receivedMessages = receivedMessages.filter(
+        (message) => !(message.event === CHAT_EVENTS.ASK_TO_FORWARD_TO_CSA && answeredForwardToCsaIds.has(message.id))
+      );
+
       if (!receivedMessages.length) return;
 
       let messageEdited = false;
+      let messageUpdated = false;
 
       const newMessagesList = state.messages.map((existingMessage) => {
         const matchingMessage = findMatchingMessageFromMessageList(existingMessage, receivedMessages);
         if (!matchingMessage) return existingMessage;
         receivedMessages = receivedMessages.filter((rMsg) => rMsg.id !== matchingMessage.id);
+        const hasChanges = (Object.keys(matchingMessage) as (keyof Message)[]).some(
+          (key) => matchingMessage[key] !== existingMessage[key]
+        );
+        if (hasChanges) messageUpdated = true;
         return { ...existingMessage, ...matchingMessage };
       });
 
@@ -778,7 +797,16 @@ export const chatSlice = createSlice({
         }
       });
 
-      if (!messageEdited && newMessagesList.length + receivedMessages.length === state.messages.length) {
+      const hasNewMessages = newMessagesList.length + receivedMessages.length !== state.messages.length;
+
+      if (!messageEdited && !hasNewMessages) {
+        // Existing messages can receive a new version with the same id (e.g. a hidden "$backoffice"
+        // LLM response becoming an ask_to_forward_to_csa / continue_chatting_with_bot event),
+        // so apply those updates without treating them as new incoming messages.
+        if (messageUpdated) {
+          state.messages = filterDuplicatMessages(newMessagesList);
+          state.chatMode = getChatModeBasedOnLastMessage(state.messages);
+        }
         return;
       }
 
