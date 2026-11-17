@@ -98,6 +98,55 @@ describe('Chat slice', () => {
       });
     });
 
+    it('should apply a new version of an existing message with the same id', () => {
+      const hiddenLlmMessage: Message = {
+        id: 'llm-uuid',
+        chatId: '1',
+        content: '$backoffice',
+        authorRole: 'assistant',
+        authorTimestamp: '2000-01-01T00:00:00.000Z',
+      };
+      const askToForwardMessage: Message = {
+        ...hiddenLlmMessage,
+        content: 'Do you want to be forwarded to a customer support agent?',
+        authorRole: 'buerokratt',
+        event: 'ask_to_forward_to_csa',
+      };
+      const previousState = { ...initialChatState, showLoadingMessage: true, messages: [mockMessage, hiddenLlmMessage] };
+
+      const nextState = reducer(previousState, addMessagesToDisplay([askToForwardMessage]));
+
+      expect(nextState.messages).toEqual([mockMessage, askToForwardMessage]);
+      expect(nextState.newMessagesAmount).toBe(0);
+      expect(nextState.showLoadingMessage).toBe(true);
+    });
+
+    it('should not revert an answered forward to CSA question when a stale version is received', () => {
+      const askToForwardMessage: Message = {
+        id: 'llm-uuid',
+        chatId: '1',
+        content: 'Do you want to be forwarded to a customer support agent?',
+        authorRole: 'buerokratt',
+        authorTimestamp: '2000-01-01T00:00:00.000Z',
+        event: 'ask_to_forward_to_csa',
+      };
+      const continueMessage: Message = {
+        ...askToForwardMessage,
+        content: '',
+        authorRole: 'end-user',
+        authorTimestamp: '2000-01-01T00:00:05.000Z',
+        event: 'continue_chatting_with_bot',
+      };
+      const previousState = { ...initialChatState, messages: [mockMessage, continueMessage] };
+
+      expect(reducer(previousState, addMessagesToDisplay([askToForwardMessage]))).toBe(previousState);
+    });
+
+    it('should not change state when received messages are identical to existing ones', () => {
+      const previousState = { ...initialChatState, messages: [mockMessage] };
+      expect(reducer(previousState, addMessagesToDisplay([{ ...mockMessage }]))).toBe(previousState);
+    });
+
     it('should add message to messageQueue', () => {
       expect(reducer(initialChatState, queueMessage(mockMessage))).toEqual({
         ...initialChatState,
