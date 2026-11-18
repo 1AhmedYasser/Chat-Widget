@@ -22,6 +22,19 @@ const baseName = getBasePath();
 const targetElement = document.getElementById(WIDGET_TARGET_ELEMENT_ID);
 targetElement?.classList.add("byk-va-root");
 
+if (targetElement) {
+  targetElement.addEventListener("focusin", (event) => event.stopPropagation());
+  window.addEventListener(
+    "focus",
+    (event) => {
+      if (event.target instanceof Node && targetElement.contains(event.target)) {
+        event.stopPropagation();
+      }
+    },
+    true
+  );
+}
+
 const mobileAppTheme = getMobileAppTheme();
 if (mobileAppTheme) {
   document.documentElement.setAttribute(THEME_ATTRIBUTE, mobileAppTheme);
