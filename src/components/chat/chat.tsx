@@ -68,8 +68,6 @@ const RESIZABLE_HANDLES = {
 
 const CHAT_WINDOW_VERTICAL_SPACING = 50;
 
-// Only treat fixed elements anchored to the lower half of the viewport (e.g. cookie banners) as obstacles,
-// so tall page headers or full-height side panels don't push the chat window around.
 const getChatMinCandidateTop = () => window.innerHeight / 2;
 
 const RESIZE_HANDLE_COMPONENTS = {
