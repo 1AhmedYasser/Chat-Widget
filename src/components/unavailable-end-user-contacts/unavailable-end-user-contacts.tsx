@@ -75,15 +75,16 @@ const UnavailableEndUserContacts = (): JSX.Element => {
             );
 
             const newMsg = getContactFormFulfilledNewMessage(endUserContacts, chatId, contactMsgId, t);
-            dispatch(sendMessageWithNewEvent(newMsg));
+            const pendingRequests: Promise<unknown>[] = [dispatch(sendMessageWithNewEvent({...newMsg}))];
             dispatch(setShowUnavailableContactForm(false));
             newMsg.content = "";
             dispatch(sendMessagePreview(newMsg));
 
             if (endUserContacts.comment) {
                 const commentMsg = getContactCommentNewMessage(endUserContacts.comment, chatId, contactMsgId, t);
-                dispatch(sendNewSilentMessage(commentMsg));
+                pendingRequests.push(dispatch(sendNewSilentMessage(commentMsg)));
             }
+            await Promise.allSettled(pendingRequests);
 
             dispatch(
                 endChat({
@@ -98,7 +99,7 @@ const UnavailableEndUserContacts = (): JSX.Element => {
     return (
         <UnavailableEndUserContactsStyle>
             <form>
-                <div className="container">
+                <div className={`container ${askForContacts ? "with-contacts" : ""}`}>
                     <div className="form-header h3-style" role="heading" aria-level={3}><Markdownify message={contactContentMessage}></Markdownify></div>
                     {invalidMessage && <div className="missing-feeback p-style">{invalidMessage}</div>}
                     {askForContacts && (

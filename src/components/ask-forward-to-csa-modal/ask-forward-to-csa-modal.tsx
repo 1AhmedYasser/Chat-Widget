@@ -4,17 +4,29 @@ import useChatSelector from "../../hooks/use-chat-selector";
 import {useAppDispatch} from "../../store";
 import {AUTHOR_ROLES, CHAT_EVENTS, StyledButtonType} from "../../constants";
 import StyledButton from "../styled-components/styled-button";
-import {redirectToBackoffice, sendMessageWithNewEvent, setShowAskToForwardToCsaForm} from "../../slices/chat-slice";
+import {
+    redirectToBackoffice,
+    sendMessageWithNewEvent,
+    setShowAskToForwardToCsaForm,
+    updateMessage,
+} from "../../slices/chat-slice";
 import {Message} from "../../model/message-model";
 import {AskForwardToCsaModalStyles} from "./AskForwardToCsaStyled";
 
 const AskForwardToCsaModal = (): JSX.Element => {
-    const {forwardToCsaMessage, chatId, forwardToCsaMessageId} = useChatSelector();
+    const {forwardToCsaMessage, chatId, forwardToCsaMessageId, messages} = useChatSelector();
     const dispatch = useAppDispatch();
     const {t} = useTranslation();
 
+    const applyEvent = (newMsg: Message) => {
+        const existingMessage = messages.find((message) => message.id === newMsg.id);
+        if (existingMessage) {
+            dispatch(updateMessage({...existingMessage, ...newMsg}));
+        }
+    };
+
     return (
-        <AskForwardToCsaModalStyles style={{ height: "100%" }}>
+        <AskForwardToCsaModalStyles>
             <div className="container">
                 <div className="h3-style header" role="heading" aria-level={3}>{forwardToCsaMessage}</div>
                 <div className="buttons">
@@ -30,6 +42,7 @@ const AskForwardToCsaModal = (): JSX.Element => {
                                 authorTimestamp: new Date().toISOString(),
                                 event: CHAT_EVENTS.FORWARDED_TO_BACKOFFICE,
                             };
+                            applyEvent(newMsg);
                             dispatch(redirectToBackoffice(newMsg));
                         }
                     }}>
@@ -45,6 +58,7 @@ const AskForwardToCsaModal = (): JSX.Element => {
                             authorTimestamp: new Date().toISOString(),
                             event: CHAT_EVENTS.CONTINUE_CHATTING_WITH_BOT,
                         };
+                        applyEvent(newMsg);
                         dispatch(sendMessageWithNewEvent(newMsg));
                         dispatch(setShowAskToForwardToCsaForm(false));
                     }}>

@@ -1,5 +1,5 @@
-import styled from "styled-components";
-import { colors, fontChat } from "../../styling/style_settings";
+import styled, { css } from "styled-components";
+import { colors, darkMode, fontChat } from "../../styling/style_settings";
 
 const LinkIcon = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16px' height='16px' viewBox='0 0 100 100' aria-hidden='true' role='img'%3E%3Cg fill='white'%3E%3Cpath d='M69.37 54.11v25.83a2.61 2.61 0 01-2.6 2.6H20a2.61 2.61 0 01-2.6-2.6v-46.8a2.61 2.61 0 012.6-2.6h31.49V24H14.12a3.26 3.26 0 00-3.25 3.25v58.5A3.26 3.26 0 0014.12 89h58.5a3.26 3.26 0 003.25-3.25V54.11z'/%3E%3Cpath d='M50.75 54.85l30.62-30.62V51a3.91 3.91 0 003.9 3.89A3.86 3.86 0 0089.13 51V14.88A3.86 3.86 0 0085.27 11H49.13a3.87 3.87 0 100 7.73h26.76L45.26 49.37a3.88 3.88 0 105.49 5.48z'/%3E%3C/g%3E%3C/svg%3E")`;
 
@@ -65,6 +65,14 @@ export const ChatMessageStyled = styled.div`
       color: white;
     }
 
+    pre,
+    code {
+      max-width: 100%;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
     @keyframes blink {
       0%,
       50% {
@@ -83,8 +91,20 @@ export const ChatMessageStyled = styled.div`
 
   .message-icon {
     display: flex;
+    box-sizing: content-box;
+    width: 2.8em;
+    min-width: 2.8em;
     height: 2.8em;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      object-fit: contain;
+    }
   }
 
   .edited-message {
@@ -413,7 +433,7 @@ export const ChatMessageStyled = styled.div`
     border-radius: 18px 4px 18px 18px !important;
   }
 
-  @media (prefers-color-scheme: dark) {
+  ${darkMode(css`
     &.mobile-app.client .content {
       background-color: #2c2c2e;
       color: ${colors.white};
@@ -423,5 +443,5 @@ export const ChatMessageStyled = styled.div`
     &.mobile-app.client a {
       color: #6ea8ff !important;
     }
-  }
+  `)}
 `;

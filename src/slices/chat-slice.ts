@@ -2,6 +2,7 @@ import { UserContacts } from "./../model/user-contacts-model";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Attachment, Message, SendLLMMessagePayload } from "../model/message-model";
 import ChatService from "../services/chat-service";
+import { getCurrentPageUrl } from "../utils/page-url-utils";
 import {
   AUTHOR_ROLES,
   CHAT_EVENTS,
@@ -57,6 +58,7 @@ export interface EndUserContacts {
 
 export interface ChatState {
   chatId: string | null;
+  verifiedChatId: string | null;
   isChatOpen: boolean;
   chatStatus: CHAT_STATUS | null;
   chatDimensions: {
@@ -82,8 +84,10 @@ export interface ChatState {
   showAskToForwardToCsaForm: boolean;
   askForContacts: boolean;
   contactMsgId: string;
+  handledContactMessageIds: string[];
   forwardToCsaMessage: string;
   forwardToCsaMessageId: string;
+  handledForwardToCsaMessageIds: string[];
   contactContentMessage: string;
   isChatRedirected: boolean;
   feedback: {
@@ -91,6 +95,7 @@ export interface ChatState {
     isFeedbackMessageGiven: boolean;
     isFeedbackRatingGiven: boolean;
     showFeedbackWarning: boolean;
+    draftRating: number | null;
   };
   endUserContacts: EndUserContacts;
   downloadChat: {
@@ -131,6 +136,7 @@ const initialEstimatedTime = {
 
 const initialState: ChatState = {
   chatId: null,
+  verifiedChatId: null,
   isChatOpen: false,
   chatStatus: null,
   chatDimensions: getInitialChatDimensions(),
@@ -146,6 +152,7 @@ const initialState: ChatState = {
   showUnavailableContactForm: false,
   showAskToForwardToCsaForm: false,
   forwardToCsaMessageId: "",
+  handledForwardToCsaMessageIds: [],
   askForContacts: true,
   forwardToCsaMessage: "",
   contactContentMessage: "",
@@ -163,11 +170,13 @@ const initialState: ChatState = {
     comment: "",
   },
   contactMsgId: "",
+  handledContactMessageIds: [],
   feedback: {
     isFeedbackConfirmationShown: false,
     isFeedbackMessageGiven: false,
     isFeedbackRatingGiven: false,
     showFeedbackWarning: false,
+    draftRating: null,
   },
   downloadChat: {
     isLoading: false,
@@ -201,6 +210,7 @@ const initialState: ChatState = {
 
 const initialStateOpen: ChatState = {
     chatId: null,
+    verifiedChatId: null,
     isChatOpen: true,
     chatStatus: null,
     chatDimensions: getInitialChatDimensions(),
@@ -216,6 +226,7 @@ const initialStateOpen: ChatState = {
     showUnavailableContactForm: false,
     showAskToForwardToCsaForm: false,
     forwardToCsaMessageId: "",
+    handledForwardToCsaMessageIds: [],
     askForContacts: true,
     forwardToCsaMessage: "",
     contactContentMessage: "",
@@ -233,11 +244,13 @@ const initialStateOpen: ChatState = {
         comment: "",
     },
     contactMsgId: "",
+    handledContactMessageIds: [],
     feedback: {
         isFeedbackConfirmationShown: false,
         isFeedbackMessageGiven: false,
         isFeedbackRatingGiven: false,
         showFeedbackWarning: false,
+        draftRating: null,
     },
     downloadChat: {
         isLoading: false,
@@ -280,7 +293,7 @@ export const initChat = createAsyncThunk(
     return ChatService.init(
       message,
       {
-        endUserUrl: window.location.href.toString(),
+        endUserUrl: getCurrentPageUrl(),
         endUserOs: agentInfo,
       },
       holidays,
@@ -289,14 +302,25 @@ export const initChat = createAsyncThunk(
   }
 );
 
-export const getChat = createAsyncThunk(
+export const getChat = createAsyncThunk<
+  Chat | null,
+  void,
+  { rejectValue: { chatId: string; isInvalidChatId: boolean } }
+>(
   "chat/getChat",
   async (_args, thunkApi) => {
     const {
       chat: { chatId },
     } = thunkApi.getState() as { chat: ChatState };
-    if (chatId) return ChatService.getChatById(chatId);
-    return null;
+    if (!chatId) return null;
+    try {
+      const chat = await ChatService.getChatById(chatId);
+      if (!chat?.id) return thunkApi.rejectWithValue({ chatId, isInvalidChatId: true });
+      return chat;
+    } catch (error: any) {
+      const status = error?.response?.status;
+      return thunkApi.rejectWithValue({ chatId, isInvalidChatId: status >= 400 && status < 500 });
+    }
   }
 );
 
@@ -486,7 +510,7 @@ export const initGreetingService = createAsyncThunk(
     const userDeviceModel = userAgent.device.model != undefined ? ` (${userAgent.device.model})` : '';
     const agentInfo = `Agent: ${browserName} (v${fullBrowserVersion}), OS: ${osName} (v${osVersion}), device: ${userDevice}${userDeviceModel}`;
     return ChatService.initGreetingService({
-      endUserUrl: window.location.href.toString(),
+      endUserUrl: getCurrentPageUrl(),
       endUserOs: agentInfo,
     });
   }
@@ -641,14 +665,26 @@ export const chatSlice = createSlice({
     setFeedbackWarning: (state, action: PayloadAction<boolean>) => {
       state.feedback.showFeedbackWarning = action.payload;
     },
+    setFeedbackDraftRating: (state, action: PayloadAction<number | null>) => {
+      state.feedback.draftRating = action.payload;
+    },
     setShowContactForm: (state, action: PayloadAction<boolean>) => {
       state.showContactForm = action.payload;
+      if (!action.payload && state.contactMsgId && !state.handledContactMessageIds.includes(state.contactMsgId)) {
+        state.handledContactMessageIds.push(state.contactMsgId);
+      }
     },
     setShowUnavailableContactForm: (state, action: PayloadAction<boolean>) => {
       state.showUnavailableContactForm = action.payload;
+      if (!action.payload && state.contactMsgId && !state.handledContactMessageIds.includes(state.contactMsgId)) {
+        state.handledContactMessageIds.push(state.contactMsgId);
+      }
     },
     setShowAskToForwardToCsaForm: (state, action: PayloadAction<boolean>) => {
       state.showAskToForwardToCsaForm = action.payload;
+      if (!action.payload && state.forwardToCsaMessageId && !state.handledForwardToCsaMessageIds.includes(state.forwardToCsaMessageId)) {
+        state.handledForwardToCsaMessageIds.push(state.forwardToCsaMessageId);
+      }
     },
     setShowLoadingMessage: (state, action: PayloadAction<boolean>) => {
       state.showLoadingMessage = action.payload;
@@ -713,14 +749,33 @@ export const chatSlice = createSlice({
     },
     addMessagesToDisplay: (state, action: PayloadAction<Message[]>) => {
       let receivedMessages = action.payload || [];
+
+      const answeredForwardToCsaIds = new Set(
+        state.messages
+          .filter(
+            (message) =>
+              message.event === CHAT_EVENTS.CONTINUE_CHATTING_WITH_BOT ||
+              message.event === CHAT_EVENTS.FORWARDED_TO_BACKOFFICE
+          )
+          .map((message) => message.id)
+      );
+      receivedMessages = receivedMessages.filter(
+        (message) => !(message.event === CHAT_EVENTS.ASK_TO_FORWARD_TO_CSA && answeredForwardToCsaIds.has(message.id))
+      );
+
       if (!receivedMessages.length) return;
 
       let messageEdited = false;
+      let messageUpdated = false;
 
       const newMessagesList = state.messages.map((existingMessage) => {
         const matchingMessage = findMatchingMessageFromMessageList(existingMessage, receivedMessages);
         if (!matchingMessage) return existingMessage;
         receivedMessages = receivedMessages.filter((rMsg) => rMsg.id !== matchingMessage.id);
+        const hasChanges = (Object.keys(matchingMessage) as (keyof Message)[]).some(
+          (key) => matchingMessage[key] !== existingMessage[key]
+        );
+        if (hasChanges) messageUpdated = true;
         return { ...existingMessage, ...matchingMessage };
       });
 
@@ -742,7 +797,16 @@ export const chatSlice = createSlice({
         }
       });
 
-      if (!messageEdited && newMessagesList.length + receivedMessages.length === state.messages.length) {
+      const hasNewMessages = newMessagesList.length + receivedMessages.length !== state.messages.length;
+
+      if (!messageEdited && !hasNewMessages) {
+        // Existing messages can receive a new version with the same id (e.g. a hidden "$backoffice"
+        // LLM response becoming an ask_to_forward_to_csa / continue_chatting_with_bot event),
+        // so apply those updates without treating them as new incoming messages.
+        if (messageUpdated) {
+          state.messages = filterDuplicatMessages(newMessagesList);
+          state.chatMode = getChatModeBasedOnLastMessage(state.messages);
+        }
         return;
       }
 
@@ -761,12 +825,14 @@ export const chatSlice = createSlice({
             state.messages = state.messages.map((message) => (message.id === msg.id ? msg : message));
             break;
           case CHAT_EVENTS.CONTACT_INFORMATION:
+            if (msg.id && state.handledContactMessageIds.includes(msg.id)) break;
             state.showContactForm = true;
             state.contactMsgId = msg.id ?? "";
             break;
           case CHAT_EVENTS.UNAVAILABLE_HOLIDAY_ASK_CONTACTS:
           case CHAT_EVENTS.UNAVAILABLE_CSAS_ASK_CONTACTS:
           case CHAT_EVENTS.UNAVAILABLE_ORGANIZATION_ASK_CONTACTS:
+            if (msg.id && state.handledContactMessageIds.includes(msg.id)) break;
             state.askForContacts = true;
             state.showUnavailableContactForm = true;
             state.contactMsgId = msg.id ?? "";
@@ -775,12 +841,14 @@ export const chatSlice = createSlice({
           case CHAT_EVENTS.UNAVAILABLE_HOLIDAY:
           case CHAT_EVENTS.UNAVAILABLE_CSAS:
           case CHAT_EVENTS.UNAVAILABLE_ORGANIZATION:
+            if (msg.id && state.handledContactMessageIds.includes(msg.id)) break;
             state.askForContacts = false;
             state.showUnavailableContactForm = true;
             state.contactMsgId = msg.id ?? "";
             state.contactContentMessage = msg.content ?? "";
             break;
           case CHAT_EVENTS.ASK_TO_FORWARD_TO_CSA:
+            if (msg.id && state.handledForwardToCsaMessageIds.includes(msg.id)) break;
             state.showAskToForwardToCsaForm = true;
             state.forwardToCsaMessageId = msg.id ?? "";
             state.forwardToCsaMessage = msg.content ?? "";
@@ -865,6 +933,7 @@ export const chatSlice = createSlice({
     });
     builder.addCase(initChat.fulfilled, (state, action) => {
       state.chatId = action.payload.id;
+      state.verifiedChatId = action.payload.id;
       state.loading = false;
       state.chatStatus = CHAT_STATUS.OPEN;
     });
@@ -885,6 +954,7 @@ export const chatSlice = createSlice({
     });
     builder.addCase(initGreetingService.fulfilled, (state, action) => {
       state.chatId = action.payload.id;
+      state.verifiedChatId = action.payload.id;
       state.loading = false;
       state.chatStatus = CHAT_STATUS.OPEN;
       state.showLoadingMessage = false;
@@ -911,8 +981,16 @@ export const chatSlice = createSlice({
     });
     builder.addCase(getChat.fulfilled, (state, action) => {
       if (!action.payload) return;
+      state.verifiedChatId = action.payload.id;
       state.chatStatus = action.payload.status as CHAT_STATUS;
       state.customerSupportId = action.payload.customerSupportId;
+    });
+    builder.addCase(getChat.rejected, (state, action) => {
+      if (!action.payload?.isInvalidChatId || action.payload.chatId !== state.chatId) return;
+      const fallbackChatId = state.verifiedChatId !== state.chatId ? state.verifiedChatId : null;
+      state.chatId = fallbackChatId;
+      state.verifiedChatId = fallbackChatId;
+      setToLocalStorage(SESSION_STORAGE_CHAT_ID_KEY, fallbackChatId);
     });
     builder.addCase(getChatMessages.fulfilled, (state, action) => {
       if (!action.payload) return;
@@ -951,6 +1029,7 @@ export const chatSlice = createSlice({
       state.chatStatus = CHAT_STATUS.ENDED;
       state.feedback.isFeedbackMessageGiven = false;
       state.feedback.isFeedbackRatingGiven = false;
+      state.feedback.draftRating = null;
       clearStateVariablesFromLocalStorage();
       localStorage.removeItem(namespacedKey("previousChatId"));
     });
@@ -958,6 +1037,7 @@ export const chatSlice = createSlice({
       state.chatStatus = CHAT_STATUS.ENDED;
       state.feedback.isFeedbackMessageGiven = false;
       state.feedback.isFeedbackRatingGiven = false;
+      state.feedback.draftRating = null;
       clearStateVariablesFromLocalStorage();
     });
     builder.addCase(sendChatNpmRating.rejected, (state) => {
@@ -981,6 +1061,7 @@ export const chatSlice = createSlice({
     builder.addCase(generateForwardingRequest.fulfilled, (state, action) => {
       if (action.payload[0].externalId) {
         state.chatId = action.payload[0].externalId;
+        state.verifiedChatId = action.payload[0].externalId;
         state.isChatRedirected = true;
       }
     });
@@ -1028,6 +1109,7 @@ export const {
   setFeedbackMessageGiven,
   setFeedbackRatingGiven,
   setFeedbackWarning,
+  setFeedbackDraftRating,
   resetNewMessagesAmount,
   setPhoneNumber,
   setIsFeedbackConfirmationShown,

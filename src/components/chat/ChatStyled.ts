@@ -1,5 +1,5 @@
-import styled from "styled-components";
-import {colors, fontChat, fontChatBold} from "../../styling/style_settings";
+import styled, { css } from "styled-components";
+import {colors, darkMode, fontChat, fontChatBold} from "../../styling/style_settings";
 
 export const ChatStyles = styled.div<{isFullScreen?: boolean}>`
     .chatWrapper {
@@ -31,7 +31,11 @@ export const ChatStyles = styled.div<{isFullScreen?: boolean}>`
       width: 100%;
       background-color: #F0F1F2;
       color: #003cff;
-      padding: 5px 0px;
+      padding: 0 12px;
+      border-top: 5px solid #F0F1F2;
+      border-bottom: 5px solid #F0F1F2;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
       font-size: 22px;
       text-align: center;
       font-family: "Aino Headline";
@@ -161,9 +165,9 @@ export const ChatStyles = styled.div<{isFullScreen?: boolean}>`
     }
 
     &.mobile-app .chat {
-        @media (prefers-color-scheme: dark) {
+        ${darkMode(css`
             background: #1c1c1e;
-        }
+        `)}
     }
 
     @media screen and (max-width: 480px) {

@@ -8,6 +8,7 @@ import {
   initChat,
   queueMessage,
   resetState,
+  sendChatNpmRating,
   sendFeedbackMessage,
   sendMessagePreview,
   sendNewMessage,
@@ -52,6 +53,16 @@ import sanitizeHtml from "sanitize-html";
 // Prevents unnecessary window scrolling when the on-screen keyboard is open
 const preventWindowScrolling = (e: TouchEvent, direction: "up" | "down") => {
   const target = e.target as HTMLElement;
+
+  const textarea = target.closest("textarea");
+  if (textarea) {
+    const canScrollUp = textarea.scrollTop > 0;
+    const canScrollDown = textarea.scrollTop + textarea.clientHeight < textarea.scrollHeight;
+    if ((direction === "down" && canScrollUp) || (direction === "up" && canScrollDown)) {
+      return;
+    }
+  }
+
   const contentElement = document.getElementsByClassName("os-content")[0] as HTMLElement;
   const top = contentElement.getBoundingClientRect().top;
 
@@ -152,8 +163,16 @@ const ChatKeyPad = (): JSX.Element => {
     }
   }, [isChatOpen, isKeypadDisabled, userInputFile]);
 
+  useEffect(() => {
+    if (chatStatus === CHAT_STATUS.ENDED) {
+      handleUploadClear();
+    }
+  }, [chatStatus]);
+
   const handleTextFeedback = () => {
-    if (widgetConfig.feedbackActive && !feedback.isFeedbackRatingGiven) {
+    const feedbackText = sanitizeHtml(userInput);
+    const hasFeedbackText = widgetConfig.feedbackNoticeActive && !!feedbackText.trim();
+    if (widgetConfig.feedbackActive && !feedback.isFeedbackRatingGiven && !hasFeedbackText) {
       dispatch(setFeedbackWarning(true));
       return;
     }
@@ -162,7 +181,10 @@ const ChatKeyPad = (): JSX.Element => {
       return;
     }
     dispatch(setFeedbackWarning(false));
-    if (widgetConfig.feedbackNoticeActive) dispatch(sendFeedbackMessage({ userInput: sanitizeHtml(userInput) }));
+    if (widgetConfig.feedbackActive && feedback.draftRating !== null) {
+      dispatch(sendChatNpmRating({ NpmRating: feedback.draftRating }));
+    }
+    if (hasFeedbackText) dispatch(sendFeedbackMessage({ userInput: feedbackText }));
     dispatch(setFeedbackMessageGiven(true));
     setIsKeypadDisabled(true);
     if (!widgetConfig.feedbackActive) {
@@ -190,7 +212,7 @@ const ChatKeyPad = (): JSX.Element => {
   const isInputValid = () => {
     if (!sanitizeHtml(userInput).trim()) return false;
 
-    if (sanitizeHtml(userInput).length > MESSAGE_MAX_CHAR_LIMIT) {
+    if (sanitizeHtml(userInput).length > MESSAGE_MAX_CHAR_LIMIT - 1) {
       setErrorMessage(t("keypad.long-message-warning", { limit: MESSAGE_MAX_CHAR_LIMIT }));
       return false;
     }
@@ -198,7 +220,7 @@ const ChatKeyPad = (): JSX.Element => {
   };
 
   useEffect(() => {
-    if (userInput.length > MESSAGE_MAX_CHAR_LIMIT) {
+    if (userInput.length > MESSAGE_MAX_CHAR_LIMIT - 1) {
       setErrorMessage(t("keypad.long-message-warning", { limit: MESSAGE_MAX_CHAR_LIMIT }));
     } else {
       setErrorMessage("");

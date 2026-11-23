@@ -43,6 +43,8 @@ const getFixedCandidates = (el: HTMLElement): Rect[] => {
     const rect = candidate.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
 
+    if (rect.top < el.offsetHeight + GAP_PX) continue;
+
     candidates.push(rect);
   }
 

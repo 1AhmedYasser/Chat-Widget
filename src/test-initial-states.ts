@@ -12,6 +12,7 @@ export const initialChatState: ChatState = {
   },
   errorMessage: "",
   chatId: null,
+  verifiedChatId: null,
   chatDimensions: {
     width: CHAT_WINDOW_WIDTH,
     height: CHAT_WINDOW_HEIGHT,
@@ -22,6 +23,7 @@ export const initialChatState: ChatState = {
   showUnavailableContactForm: false,
   showAskToForwardToCsaForm: false,
   forwardToCsaMessageId: "",
+  handledForwardToCsaMessageIds: [],
   askForContacts: true,
   forwardToCsaMessage: "",
   contactContentMessage: "",
@@ -32,6 +34,7 @@ export const initialChatState: ChatState = {
   chatStatus: null,
   lastReadMessageTimestamp: null,
   contactMsgId: "",
+  handledContactMessageIds: [],
   estimatedWaiting: {
     positionInUnassignedChats: "",
     durationInSeconds: "",
@@ -47,6 +50,7 @@ export const initialChatState: ChatState = {
     isFeedbackMessageGiven: false,
     isFeedbackRatingGiven: false,
     showFeedbackWarning: false,
+    draftRating: null,
   },
   downloadChat: {
     isLoading: false,
