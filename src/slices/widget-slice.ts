@@ -147,12 +147,11 @@ export const widgetSlice = createSlice({
       state.widgetConfig.showAutoCloseText =
           action.payload?.showAutoCloseText === "true";
       state.widgetConfig.autoCloseText = action.payload?.autoCloseText ?? "";
-      state.widgetConfig.feedbackActive =
-        action.payload?.feedbackActive === "true";
+      // Feedback (rating + text) is temporarily disabled regardless of backend config
+      state.widgetConfig.feedbackActive = false;
       state.widgetConfig.feedbackQuestion =
         action.payload?.feedbackQuestion ?? "";
-      state.widgetConfig.feedbackNoticeActive =
-        action.payload?.feedbackNoticeActive === "true";
+      state.widgetConfig.feedbackNoticeActive = false;
       state.widgetConfig.feedbackNotice = action.payload?.feedbackNotice ?? "";
       state.widgetConfig.isFiveRatingScale = action.payload?.isFiveRatingScale === "true";
       state.widgetConfig.instantlyOpenChatWidget =

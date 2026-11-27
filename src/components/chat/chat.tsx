@@ -28,6 +28,7 @@ import {
   setIdleChat,
   setIsChatOpen,
   setIsFeedbackConfirmationShown,
+  setFeedbackMessageGiven,
 } from "../../slices/chat-slice";
 import { showConfirmationModal } from "../../slices/widget-slice";
 import WarningNotification from "../warning-notification/warning-notification";
@@ -201,6 +202,18 @@ const Chat = ({ triggerRef }: ChatProps): JSX.Element => {
     feedback.isFeedbackConfirmationShown,
     feedback.isFeedbackMessageGiven,
   ]);
+
+  // Feedback is temporarily disabled: once the chat ends, go straight to the confirmation and close the chat
+  useEffect(() => {
+    if (
+      isChatEnded &&
+      chatId &&
+      !feedback.isFeedbackMessageGiven &&
+      !feedback.isFeedbackConfirmationShown
+    ) {
+      dispatch(setFeedbackMessageGiven(true));
+    }
+  }, [dispatch, isChatEnded, chatId, feedback.isFeedbackMessageGiven, feedback.isFeedbackConfirmationShown]);
 
   useEffect(() => {
     if (
