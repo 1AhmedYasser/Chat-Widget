@@ -37,7 +37,8 @@ export default function ConfirmationModal(): JSX.Element {
             option === CHAT_EVENTS.CLIENT_LEFT_WITH_ACCEPTED ||
             CHAT_EVENTS.CLIENT_LEFT_WITH_NO_RESOLUTION
         ) {
-            if (isChatEnded) {
+            // Feedback step is temporarily disabled: end the chat directly
+            if (isChatEnded || true) {
                 dispatch(endChat({event: option, isUpperCase: true}))
             } else {
                 setNps({
